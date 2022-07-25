@@ -3,17 +3,15 @@ import TextField from "@mui/material/TextField";
 import { Button, Paper } from "@mui/material";
 import Alert from "@mui/material/Alert";
 
-const BuyForm = () => {
+const WithdrawForm = () => {
   const [ID, setID] = React.useState("");
-  const [tokenAmount, setTokenAmount] = React.useState("");
 
   const onIDChange = (e) => setID(e.target.value);
-  const onTokenAmountChange = (e) => setTokenAmount(e.target.value);
 
   const [isError, setError] = useState(false);
 
   const handleSubmit = () => {
-    if (ID && tokenAmount) {
+    if (ID) {
       console.log("submit");
       setError(false);
     } else {
@@ -24,7 +22,6 @@ const BuyForm = () => {
 
   const handleReset = () => {
     setID("");
-    setTokenAmount("");
     setError(false);
   };
 
@@ -38,7 +35,7 @@ const BuyForm = () => {
 
   return (
     <Paper>
-      <h1>Buy Form</h1>
+      <h1>Withdraw Form</h1>
       {errorAlert}
 
       <TextField
@@ -47,12 +44,7 @@ const BuyForm = () => {
         label={"Presale ID"}
         required
       />
-      <TextField
-        onChange={onTokenAmountChange}
-        value={tokenAmount}
-        label={"Token Amount"}
-        required
-      />
+
       <Button variant="outlined" onClick={handleSubmit}>
         Submit
       </Button>
@@ -63,4 +55,4 @@ const BuyForm = () => {
   );
 };
 
-export default BuyForm;
+export default WithdrawForm;

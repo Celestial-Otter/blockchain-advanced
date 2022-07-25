@@ -60,7 +60,7 @@ const PresaleForm = () => {
 
   return (
     <Paper>
-      <h2>PresaleForm</h2>
+      <h1>Presale Form</h1>
       {errorAlert}
       <LocalizationProvider dateAdapter={AdapterMoment}>
         <DateTimePicker
@@ -84,19 +84,30 @@ const PresaleForm = () => {
           }}
         />
       </LocalizationProvider>
-      <TextField onChange={onPriceChange} value={priceValue} label={"Price"} />
+      <TextField
+        onChange={onPriceChange}
+        value={priceValue}
+        label={"Price"}
+        required
+      />
       <TextField
         onChange={onTokenAmountChange}
         value={tokenAmount}
         label={"Token Amount"}
+        required
       />
       <TextField
         onChange={onTokenAddressChange}
         value={tokenAddress}
         label={"Token Address"}
+        required
       />
-      <Button onClick={handleSubmit}>Submit</Button>
-      <Button onClick={handleReset}>Reset</Button>
+      <Button variant="outlined" onClick={handleSubmit}>
+        Submit
+      </Button>
+      <Button variant="outlined" onClick={handleReset}>
+        Reset
+      </Button>
     </Paper>
   );
 };

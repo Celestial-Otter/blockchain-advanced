@@ -3,11 +3,14 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Roles.sol";
+import "@openzeppelin/contracts/drafts/Counters.sol";
 
 contract Presale {
     using Roles for Roles.Role;
+    using Counters for Counters.Counter;
 
     Roles.Role private Owner;
+    Counters.Counter private presaleIDs;
 
     struct PresaleRequest {
         uint256 startTimestamp;
@@ -31,7 +34,12 @@ contract Presale {
         _;
     }
 
-    function startPresale() public {}
+    function startPresale(
+    uint 256 _startTimestamp, 
+    uint256 _endTimestamp;
+        uint256 _price;
+        uint256 _numberofTokens;
+        address _tokenLocation; ) public {}
 
     function buy() public {}
 
