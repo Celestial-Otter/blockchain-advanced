@@ -2,6 +2,7 @@ import "./App.css";
 import PresaleForm from "./components/PresaleForm";
 import BuyForm from "./components/BuyForm";
 import WithdrawForm from "./components/WithdrawForm";
+import EndPresaleForm from "./components/EndPresaleForm";
 
 function App() {
   return (
@@ -11,6 +12,8 @@ function App() {
       <BuyForm />
 
       <WithdrawForm />
+
+      <EndPresaleForm />
     </div>
   );
 }

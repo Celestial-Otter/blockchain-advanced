@@ -18,15 +18,15 @@ contract Presale {
         uint256 price;
         uint256 numberofTokens;
         address tokenLocation;
-        mapping(uint256 => address) IDs;
     }
 
     uint256 basisPoint;
-    PresaleRequest[] public presaleList;
+    mapping (uint256 => PresaleRequest) public presaleRequests;
 
     constructor(uint256 _basisPoint) {
         basisPoint = _basisPoint;
         Owner.add(msg.sender);
+        presaleIDs.increment(); //skip 0 so counter starts at 1
     }
 
     modifier OwnerOnly() {
@@ -35,17 +35,27 @@ contract Presale {
     }
 
     function startPresale(
-    uint 256 _startTimestamp, 
-    uint256 _endTimestamp;
-        uint256 _price;
-        uint256 _numberofTokens;
-        address _tokenLocation; ) public {}
+    uint 256 _startTimestamp, uint256 _endTimestamp, uint256 _price, uint256 _numberofTokens, address _tokenLocation) public {
+            presaleRequests[presaleIDs.current()] = PresaleRequest({
+                startTimestamp: _startTimestamp,
+                endTimestamp: _endTimestamp,
+                price: _price,
+                numberofTokens: _numberofTokens,
+                tokenLocation: _tokenLocation
+            });
 
-    function buy() public {}
+            presaleIDs.increment();
+        }
 
-    function withdraw() public {}
+    function buy(uint256 _ID, uint256 _tokenAmount) public {}
 
-    function endPresale() public {}
+    function withdraw(uint256 _ID) public {}
+
+    function endPresale(uint256 _ID) public {}
+
+    function getPresale(uint256 _ID) public view returns (PresaleRequest) {
+        return presaleRequests[_ID];
+    }
 
     function changeUsageFee(uint256 newBasisPoint) public OwnerOnly {
         basisPoint = newBasisPoint;
