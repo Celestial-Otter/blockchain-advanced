@@ -2,14 +2,11 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Roles.sol";
-import "@openzeppelin/contracts/drafts/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Presale {
-    using Roles for Roles.Role;
+contract Presale is Ownable {
     using Counters for Counters.Counter;
-
-    Roles.Role private Owner;
     Counters.Counter private presaleIDs;
 
     struct PresaleRequest {
@@ -21,31 +18,30 @@ contract Presale {
     }
 
     uint256 basisPoint;
-    mapping (uint256 => PresaleRequest) public presaleRequests;
+    mapping(uint256 => PresaleRequest) public presaleRequests;
 
     constructor(uint256 _basisPoint) {
         basisPoint = _basisPoint;
-        Owner.add(msg.sender);
         presaleIDs.increment(); //skip 0 so counter starts at 1
     }
 
-    modifier OwnerOnly() {
-        require(Owner.has(msg.sender));
-        _;
-    }
-
     function startPresale(
-    uint 256 _startTimestamp, uint256 _endTimestamp, uint256 _price, uint256 _numberofTokens, address _tokenLocation) public {
-            presaleRequests[presaleIDs.current()] = PresaleRequest({
-                startTimestamp: _startTimestamp,
-                endTimestamp: _endTimestamp,
-                price: _price,
-                numberofTokens: _numberofTokens,
-                tokenLocation: _tokenLocation
-            });
+        uint256 _startTimestamp,
+        uint256 _endTimestamp,
+        uint256 _price,
+        uint256 _numberofTokens,
+        address _tokenLocation
+    ) public {
+        presaleRequests[presaleIDs.current()] = PresaleRequest({
+            startTimestamp: _startTimestamp,
+            endTimestamp: _endTimestamp,
+            price: _price,
+            numberofTokens: _numberofTokens,
+            tokenLocation: _tokenLocation
+        });
 
-            presaleIDs.increment();
-        }
+        presaleIDs.increment();
+    }
 
     function buy(uint256 _ID, uint256 _tokenAmount) public {}
 
@@ -53,11 +49,15 @@ contract Presale {
 
     function endPresale(uint256 _ID) public {}
 
-    function getPresale(uint256 _ID) public view returns (PresaleRequest) {
+    function getPresale(uint256 _ID)
+        public
+        view
+        returns (PresaleRequest memory)
+    {
         return presaleRequests[_ID];
     }
 
-    function changeUsageFee(uint256 newBasisPoint) public OwnerOnly {
+    function changeUsageFee(uint256 newBasisPoint) public onlyOwner {
         basisPoint = newBasisPoint;
     }
 }
