@@ -15,6 +15,7 @@ contract Presale is Ownable {
         uint256 price;
         uint256 numberofTokens;
         address tokenLocation;
+        uint256 numberofTokensSold;
     }
 
     uint256 basisPoint;
@@ -37,15 +38,35 @@ contract Presale is Ownable {
             endTimestamp: _endTimestamp,
             price: _price,
             numberofTokens: _numberofTokens,
-            tokenLocation: _tokenLocation
+            tokenLocation: _tokenLocation,
+            numberofTokensSold: 0
         });
 
         presaleIDs.increment();
     }
 
-    function buy(uint256 _ID, uint256 _tokenAmount) public {}
+    function buy(uint256 _ID, uint256 _buyTokenAmount) public payable {
+        PresaleRequest memory presaleRequest = presaleRequests[_ID];
+        require(
+            block.timestamp >= presaleRequest.startTimestamp &&
+                block.timestamp <= presaleRequest.endTimestamp &&
+                presaleRequest.numberofTokens -
+                    presaleRequest.numberofTokensSold >=
+                _buyTokenAmount &&
+                msg.value >= presaleRequest.price + basisPoint
+        );
+        presaleRequest.numberofTokensSold +=
+            _buyTokenAmount /
+            presaleRequest.price;
+        presaleRequests[_ID] = presaleRequest;
+    }
 
-    function withdraw(uint256 _ID) public {}
+    function withdraw(uint256 _ID) public {
+        IERC20(presaleRequests[_ID].tokenLocation).transfer(
+            msg.sender,
+            presaleRequests[_ID].numberofTokens
+        );
+    }
 
     function endPresale(uint256 _ID) public {}
 
