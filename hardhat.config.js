@@ -5,7 +5,9 @@ module.exports = {
   solidity: "0.8.4",
   networks: {
     hardhat: {
-      chainId: 1337,
+      forking: {
+        url: "https://eth-mainnet.g.alchemy.com/v2/3THTELObJxEBPmrz7ZoEVHNeqdcE0YY2",
+      },
     },
     rinkeby: {
       url: "https://rinkeby.infura.io/v3/f3090b56e9514554883f3053772f2ddc",

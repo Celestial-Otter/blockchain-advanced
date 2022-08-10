@@ -3,19 +3,29 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@uniswap/v2-periphery/contracts/UniswapV2Router02.sol";
 
-Interface IUniswap {
+//import "@uniswap/v2-periphery/contracts/UniswapV2Router02.sol";
+
+interface IUniswap {
     function addLiquidityETH(
         address token,
-        uint amountTokenDesired,
-        uint amountTokenMin,
-        uint amountETHMin,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
         address to,
-        uint deadline
-    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+        uint256 deadline
+    )
+        external
+        payable
+        returns (
+            uint256 amountToken,
+            uint256 amountETH,
+            uint256 liquidity
+        );
 }
+
 contract Presale is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private presaleIDs;
@@ -33,12 +43,12 @@ contract Presale is Ownable {
     uint256 basisPoint;
     uint256 totalFees;
     mapping(uint256 => PresaleRequest) public presaleRequests;
-    address private constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    address private constant UNISWAP_V2_ROUTER =
+        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     IUniswap public uniswap;
 
-
-    constructor(uint256 _basisPoint, address _uniswap) {
-        basisPoint = _basisPoint;
+    constructor() {
+        basisPoint = 1;
         presaleIDs.increment(); //skip 0 so counter starts at 1
         uniswap = IUniswap(UNISWAP_V2_ROUTER);
     }
@@ -50,6 +60,14 @@ contract Presale is Ownable {
         uint256 _numberofTokens,
         address _tokenLocation
     ) public {
+        require(
+            IERC20(_tokenLocation).transferFrom(
+                msg.sender,
+                address(this),
+                _numberofTokens
+            )
+        );
+
         presaleRequests[presaleIDs.current()] = PresaleRequest({
             startTimestamp: _startTimestamp,
             endTimestamp: _endTimestamp,
@@ -64,7 +82,7 @@ contract Presale is Ownable {
     }
 
     function buy(uint256 _ID, uint256 _buyTokenAmount) public payable {
-        PresaleRequest memory presaleRequest = presaleRequests[_ID];
+        PresaleRequest storage presaleRequest = presaleRequests[_ID];
         require(
             block.timestamp >= presaleRequest.startTimestamp &&
                 block.timestamp <= presaleRequest.endTimestamp &&
@@ -73,21 +91,30 @@ contract Presale is Ownable {
                 _buyTokenAmount &&
                 msg.value >= presaleRequest.price * (1 + basisPoint / 100)
         );
-        presaleRequest.fees += msg.value - presaleRequest.price; //fee is the difference between the price and the amount paid
+        presaleRequest.fees +=
+            msg.value -
+            presaleRequest.price *
+            _buyTokenAmount; //fee is the difference between the price and the amount paid
         presaleRequest.numberofTokensSold += _buyTokenAmount;
     }
 
     function withdraw(uint256 _ID) public {
         require(block.timestamp >= presaleRequests[_ID].endTimestamp);
+        IERC20(presaleRequests[_ID].tokenLocation).approve(
+            msg.sender,
+            presaleRequests[_ID].numberofTokens -
+                presaleRequests[_ID].numberofTokensSold
+        );
 
         IERC20(presaleRequests[_ID].tokenLocation).transfer(
             msg.sender,
-            presaleRequests[_ID].numberofTokens
+            presaleRequests[_ID].numberofTokens -
+                presaleRequests[_ID].numberofTokensSold
         );
     }
 
     function endPresale(uint256 _ID) public {
-        PresaleRequest memory presaleRequest = presaleRequests[_ID];
+        PresaleRequest storage presaleRequest = presaleRequests[_ID];
         require(
             block.timestamp >= presaleRequest.endTimestamp &&
                 IERC20(presaleRequest.tokenLocation).transferFrom(
@@ -98,14 +125,19 @@ contract Presale is Ownable {
         );
         totalFees += presaleRequest.fees;
 
-        IERC20(presaleRequest.tokenLocation).approve(uniswap.address, presaleRequest.numberofTokensSold);
-        uniswap.addLiquidityETH{value: presaleRequest.numberofTokensSold * presaleRequest.price}(
+        IERC20(presaleRequest.tokenLocation).approve(
+            UNISWAP_V2_ROUTER,
+            presaleRequest.numberofTokensSold
+        );
+        uniswap.addLiquidityETH{
+            value: presaleRequest.numberofTokensSold * presaleRequest.price
+        }(
             presaleRequest.tokenLocation,
             presaleRequest.numberofTokensSold,
             1,
             1,
             address(this),
-            block.timestamp;
+            block.timestamp
         );
     }
 
