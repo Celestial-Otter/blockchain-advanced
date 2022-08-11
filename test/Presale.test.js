@@ -1,7 +1,6 @@
-const { extractEventHandlers } = require("@mui/base");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
+const { wait } = require("@testing-library/user-event/dist/utils");
 const { expect } = require("chai");
-const { faIR } = require("date-fns/locale");
 
 describe("Presale", function () {
   async function deployPresale() {
@@ -18,7 +17,6 @@ describe("Presale", function () {
 
   it("Should set the right owner", async function () {
     const { presale, owner } = await loadFixture(deployPresale);
-    console.log(owner.address);
     expect(await presale.owner()).to.equal(owner.address);
   });
 
@@ -91,11 +89,27 @@ describe("Presale", function () {
     const { presale, testToken, owner } = await loadFixture(deployPresale);
 
     await testToken.approve(presale.address, 100, { from: owner.address });
-    await presale.startPresale(1, 99999, 1, 100, testToken.address);
 
-    await presale.endPresale(1, { from: owner.address });
-    const testPresaleID = await presale.presaleRequests(1);
+    const currentBlockTimestamp = Number(await presale.getBlockTimestamp());
 
-    expect(await parseInt(testPresaleID.numberofTokensSold)).to.equal(0);
+    await presale.startPresale(
+      1,
+      currentBlockTimestamp + 5,
+      1,
+      100,
+      testToken.address
+    );
+
+    await presale.buy(1, 10, { from: owner.address, value: 11 });
+
+    await testToken.approve(presale.address, 10, { from: owner.address });
+
+    setTimeout(async () => {
+      await presale.endPresale(1, { from: owner.address });
+    }, 5000);
+
+    testPresaleID = await presale.presaleRequests(1);
+
+    expect(await parseInt(testPresaleID.numberofTokensSold)).to.equal(10);
   });
 });

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "hardhat/console.sol";
 
 //import "@uniswap/v2-periphery/contracts/UniswapV2Router02.sol";
 
@@ -84,12 +85,18 @@ contract Presale is Ownable {
     function buy(uint256 _ID, uint256 _buyTokenAmount) public payable {
         PresaleRequest storage presaleRequest = presaleRequests[_ID];
         require(
-            block.timestamp >= presaleRequest.startTimestamp &&
-                block.timestamp <= presaleRequest.endTimestamp &&
-                presaleRequest.numberofTokens -
-                    presaleRequest.numberofTokensSold >=
+            block.timestamp >= presaleRequest.startTimestamp,
+            "Presale has not started yet"
+        );
+        require(
+            block.timestamp <= presaleRequest.endTimestamp,
+            "Presale has not ended yet"
+        );
+        require(
+            presaleRequest.numberofTokens - presaleRequest.numberofTokensSold >=
                 _buyTokenAmount &&
-                msg.value >= presaleRequest.price * (1 + basisPoint / 100)
+                msg.value >= presaleRequest.price * (1 + basisPoint / 100),
+            "Not enough tokens left to buy"
         );
         presaleRequest.fees +=
             msg.value -
@@ -99,7 +106,10 @@ contract Presale is Ownable {
     }
 
     function withdraw(uint256 _ID) public {
-        require(block.timestamp >= presaleRequests[_ID].endTimestamp);
+        require(
+            block.timestamp >= presaleRequests[_ID].endTimestamp,
+            "Presale has not ended yet"
+        );
         IERC20(presaleRequests[_ID].tokenLocation).approve(
             msg.sender,
             presaleRequests[_ID].numberofTokens -
@@ -115,13 +125,18 @@ contract Presale is Ownable {
 
     function endPresale(uint256 _ID) public {
         PresaleRequest storage presaleRequest = presaleRequests[_ID];
+        console.log(block.timestamp);
         require(
-            block.timestamp >= presaleRequest.endTimestamp &&
-                IERC20(presaleRequest.tokenLocation).transferFrom(
-                    msg.sender,
-                    address(this),
-                    presaleRequest.numberofTokensSold
-                )
+            block.timestamp >= presaleRequest.endTimestamp,
+            "Presale not over yet"
+        );
+        require(
+            IERC20(presaleRequest.tokenLocation).transferFrom(
+                msg.sender,
+                address(this),
+                presaleRequest.numberofTokensSold
+            ),
+            "Need to authorize enough tokens to transfer"
         );
         totalFees += presaleRequest.fees;
 
@@ -143,5 +158,9 @@ contract Presale is Ownable {
 
     function changeUsageFee(uint256 newBasisPoint) public onlyOwner {
         basisPoint = newBasisPoint;
+    }
+
+    function getBlockTimestamp() public view returns (uint256) {
+        return block.timestamp;
     }
 }
