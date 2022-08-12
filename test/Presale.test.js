@@ -111,5 +111,14 @@ describe("Presale", function () {
     testPresaleID = await presale.presaleRequests(1);
 
     expect(await parseInt(testPresaleID.numberofTokensSold)).to.equal(10);
+    expect(await parseInt(testPresaleID.fees)).to.equal(1);
+  });
+
+  it("Should be able to use the changeUsageFee function", async function () {
+    const { owner, presale } = await loadFixture(deployPresale);
+
+    await presale.changeUsageFee(5, { from: owner.address });
+
+    expect(await parseInt(presale.basisPoint())).to.equal(5);
   });
 });
