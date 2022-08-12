@@ -138,6 +138,7 @@ contract Presale is Ownable {
             ),
             "Need to authorize enough tokens to transfer"
         );
+
         totalFees += presaleRequest.fees;
 
         IERC20(presaleRequest.tokenLocation).approve(
@@ -158,6 +159,14 @@ contract Presale is Ownable {
 
     function changeUsageFee(uint256 newBasisPoint) public onlyOwner {
         basisPoint = newBasisPoint;
+    }
+
+    function getBasisPoint() public view returns (uint256) {
+        return basisPoint;
+    }
+
+    function getTotalFees() public view returns (uint256) {
+        return totalFees;
     }
 
     function getBlockTimestamp() public view returns (uint256) {
